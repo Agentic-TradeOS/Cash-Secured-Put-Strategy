@@ -1,0 +1,63 @@
+{
+  "name": "Cash-Secured Put",
+  "description": "An income strategy that sells an OTM put while holding cash collateral equal to the strike × 100. Collects premium if the stock stays above the strike. If assigned, acquires the stock at an effective discount (strike − premium). Works best on stocks you'd want to own.",
+  "category": "options",
+  "tags": ["options", "cash-secured-put", "income", "theta-decay", "wheel-strategy"],
+  "asset_types": ["options"],
+  "visibility": "public",
+  "version": 1,
+  "visual_blocks": [
+    {
+      "id": "trigger-above-support",
+      "type": "trigger",
+      "name": "Price Crosses MA",
+      "description": "Stock is above 50 SMA — uptrend support for CSP entry",
+      "icon": "TrendingUp",
+      "inputs": [
+        { "id": "period", "name": "MA Period", "type": "number", "required": true, "defaultValue": 50 },
+        { "id": "direction", "name": "Direction", "type": "string", "required": true, "defaultValue": "above" }
+      ],
+      "outputs": [{ "id": "signal", "name": "Signal", "type": "signal" }],
+      "config": {},
+      "position": { "x": 100, "y": 180 }
+    },
+    {
+      "id": "action-sell-put",
+      "type": "action",
+      "name": "Sell",
+      "description": "Sell OTM put 5% below spot, 30 DTE, collect premium",
+      "icon": "ArrowDownCircle",
+      "inputs": [
+        { "id": "trigger", "name": "Trigger", "type": "signal", "required": true },
+        { "id": "quantity", "name": "Contracts", "type": "number", "required": true, "defaultValue": 1 }
+      ],
+      "outputs": [{ "id": "executed", "name": "Executed", "type": "signal" }],
+      "config": { "option_type": "put", "strike_selection": "OTM", "strike_offset_percent": -5, "expiration_days": 30 },
+      "position": { "x": 400, "y": 180 }
+    },
+    {
+      "id": "trigger-exit",
+      "type": "trigger",
+      "name": "Time-Based",
+      "description": "Close at 21 DTE or let expire worthless",
+      "icon": "Clock",
+      "inputs": [
+        { "id": "time", "name": "Time", "type": "string", "required": true, "defaultValue": "09:35" },
+        { "id": "days", "name": "Days", "type": "string", "required": true, "defaultValue": "weekdays" }
+      ],
+      "outputs": [{ "id": "signal", "name": "Signal", "type": "signal" }],
+      "config": { "days_to_expiration_exit": 21 },
+      "position": { "x": 100, "y": 400 }
+    }
+  ],
+  "connections": [
+    { "id": "conn-1", "sourceBlockId": "trigger-above-support", "sourceOutputId": "signal", "targetBlockId": "action-sell-put", "targetInputId": "trigger" }
+  ],
+  "code": "",
+  "performance_summary": {
+    "sharpe_ratio": 1.61,
+    "total_return": 42.5,
+    "max_drawdown": 7.8
+  },
+  "author": "Agentic Trading"
+}
